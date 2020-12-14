@@ -1,0 +1,510 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: smartthings-schema
+  description: The Samsung Smartthings schema API
+
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /:
+    post:
+      operationId: request
+      parameters:
+      - in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/SmartthingsRequest'
+      responses:
+        200:
+          description: OK
+
+definitions:
+
+  InteractionType:
+    type: string
+    enum:
+      - discoveryRequest
+      - discoveryResponse
+      - stateRefreshRequest
+      - stateRefreshResponse
+      - commandRequest
+      - commandResponse
+      - grantCallbackAccess
+      - accessTokenRequest
+      - accessTokenResponse
+      - refreshAccessTokens
+      - stateCallback
+      - discoveryCallback
+      - interactionResult
+      - integrationDeleted
+
+  Headers:
+    type: object
+    required:
+      - schema
+      - version
+      - interactionType
+      - requestId
+    properties:
+      schema:
+        type: string
+        enum:
+          - st-schema
+      version:
+        type: string
+        enum:
+          - "1.0"
+      interactionType:
+        $ref: "#/definitions/InteractionType"
+      requestId:
+        type: string
+        maxLength: 128
+        pattern: "^[a-zA-Z0-9-+.]+$"
+
+  Authentication:
+    type: object
+    required:
+      - tokenType
+      - token
+    properties:
+      tokenType:
+        type: string
+        enum:
+          - Bearer
+      token:
+        type: string
+        maxLength: 4096
+
+  Cookie:
+    type: object
+    additionalProperties:
+      type: string
+      maxLength: 5120
+  
+  Manufacturer:
+    type: object
+    required:
+      - manufacturerName
+      - modelName
+    properties:
+      manufacturerName:
+        type: string
+        maxLength: 100
+      modelName:
+        type: string
+        maxLength: 100
+      hwVersion:
+        type: string
+        maxLength: 100
+      swVersion:
+        type: string
+        maxLength: 100
+
+  DeviceContext:
+    type: object
+    required:
+      - roomName
+      - groups
+    properties:
+      roomName:
+        type: string
+        maxLength: 100
+      groups:
+        type: array
+        items:
+          type: string
+          maxLength: 100
+      categories:
+        type: array
+        items:
+          type: string
+          maxLength: 100
+
+  Device:
+    type: object
+    properties:
+      externalDeviceId:
+        type: string
+        maxLength: 256
+      deviceCookie:
+        $ref: "#/definitions/Cookie"
+      friendlyName:
+        type: string
+        maxLength: 100
+      manufacturerInfo:
+        $ref: "#/definitions/Manufacturer"
+      deviceContext:
+        $ref: "#/definitions/DeviceContext"
+      deviceHandlerType:
+        type: string
+        maxLength: 30
+      deviceUniqueId:
+        type: string
+        maxLength: 30
+
+  Command:
+    type: object
+    required:
+     - component
+     - capability
+     - command
+     - arguments
+    properties:
+      component:
+        type: string
+        maxLength: 30
+      capability:
+        type: string
+        maxLength: 30
+        pattern: '^st\.'
+      command:
+        type: string
+        maxLength: 30
+      arguments:
+        type: array
+        items: {}
+
+
+  DeviceRequest:
+    type: object
+    required:
+      - externalDeviceId
+    properties:
+      externalDeviceId:
+        type: string
+        maxLength: 256
+      deviceCookie:
+        $ref: "#/definitions/Cookie"
+      commands:
+        type: array
+        items:
+          $ref: "#/definitions/Command"
+
+
+  DeviceState:
+    type: object
+    properties:
+      externalDeviceId:
+        type: string
+        maxLength: 256
+      deviceCookie:
+        $ref: "#/definitions/Cookie"
+      states:
+        type: array
+        items:
+          type: object
+          additionalProperties: true
+          properties:
+            component:
+              type: string
+              maxLength: 30
+            capability:
+              type: string
+              maxLength: 30
+              pattern: '^st\.'
+            attribute:
+              type: string
+              maxLength: 30
+            value: {}
+            timestamp:
+              type: integer
+              maximum: 2147483647000
+              minimum: -2147483648000
+      deviceError:
+        x-omitempty: true
+        type: array
+        items:
+          type: object
+          required:
+            - errorEnum
+          properties:
+            errorEnum:
+              type: string
+              maxLength: 50
+#              enum:
+#               - DEVICE-DELETED
+#               - RESOURCE-CONTRAINT-VIOLATION
+#               - DEVICE-UNAVAILABLE
+#               - CAPABILITY-NOT-SUPPORTED
+#               - BAD-REPONSE
+            detail:
+              type: string
+              maxLength: 256
+
+  GlobalError:
+    type: object
+    required:
+      - errorEnum
+    properties:
+      errorEnum:
+        type: string
+        enum:
+          - TOKEN-EXPIRED
+          - INTEGRATION-DELETED
+          - BAD-REQUEST
+          - INVALID-TOKEN
+          - INVALID-INTERACTION-TYPE
+          - UNSUPPORTED-GRANT-TYPE
+          - INVALID-CODE
+          - INVALID-CLIENT-SECRET
+          - INVALID-CLIENT
+      detail:
+        type: string
+        maxLength: 100
+
+  CallbackAuth:
+    type: object
+    properties:
+      grantType:
+        type: string
+        maxLength: 30
+      scope:
+        type: string
+        maxLength: 256
+      code:
+        type: string
+        maxLength: 256
+      clientId:
+        type: string
+        maxLength: 100
+  
+  CallbackUrls:
+    type: object
+    required:
+      - oauthToken
+      - stateCallback
+    properties:
+      oauthToken:
+        type: string
+        maxLength: 256
+      stateCallback:
+        type: string
+        maxLength: 256
+
+                
+  SmartthingsRequest:
+    type: object
+    required:
+      - headers
+      - authentication
+    additionalProperties: false
+    properties:
+      headers:
+        $ref: '#/definitions/Headers'
+      authentication:
+        $ref: "#/definitions/Authentication"
+      devices:
+        type: array
+        items:
+          $ref: "#/definitions/DeviceRequest"
+      callbackAuthentication:
+        $ref: '#/definitions/CallbackAuth'
+      callbackUrls:
+        $ref: '#/definitions/CallbackUrls'
+      originatingInteractionType:
+        $ref: "#/definitions/InteractionType"
+      globalError:
+        $ref: "#/definitions/GlobalError"
+      deviceState:
+        type: array
+        items:
+          $ref: "#/definitions/DeviceState"
+
+
+  AccessTokenRequest:
+    type: object
+    required:
+      - headers
+      - callbackAuthentication
+    properties:
+      headers:
+        $ref: '#/definitions/Headers'
+      callbackAuthentication:
+        type: object
+        required:
+          - grantType
+          - code
+          - clientId
+          - clientSecret
+        properties:
+          grantType:
+            type: string
+            enum:
+              - authorization_code
+          code:
+            type: string
+            maxLength: 100
+          clientId:
+            type: string
+            maxLength: 100
+          clientSecret:
+            type: string
+            maxLength: 100
+
+  AccessTokenResponse:
+    type: object
+    required:
+      - headers
+      - callbackAuthentication
+    properties:
+      headers:
+        $ref: '#/definitions/Headers'
+      callbackAuthentication:
+        type: object
+        required:
+          - tokenType
+          - accessToken
+          - refreshToken
+          - expiresIn
+        properties:
+          tokenType:
+            type: string
+            enum:
+              - Bearer
+          accessToken:
+            type: string
+            maxLength: 4096
+          refreshToken:
+            type: string
+            maxLength: 4096
+          expiresIn:
+            type: integer
+            maximum: 315360000
+
+  RefreshAccessTokenRequest:
+    type: object
+    required:
+      - headers
+      - callbackAuthentication
+    properties:
+      headers:
+        $ref: '#/definitions/Headers'
+      callbackAuthentication:
+        type: object
+        required:
+          - grantType
+          - refreshToken
+          - clientId
+          - clientSecret
+        properties:
+          grantType:
+            type: string
+            enum:
+              - refresh_token
+          refreshToken:
+            type: string
+            maxLength: 4096
+          clientId:
+            type: string
+            maxLength: 100
+          clientSecret:
+            type: string
+            maxLength: 100
+
+
+  DeviceStateCallback:
+    type: object
+    required:
+      - headers
+      - authentication
+      - deviceState
+    properties:
+      headers:
+        $ref: '#/definitions/Headers'
+      authentication:
+        $ref: "#/definitions/Authentication"
+      globalError:
+        $ref: "#/definitions/GlobalError"
+      deviceState:
+        type: array
+        items:
+          $ref: "#/definitions/DeviceState"
+    
+  DiscoveryCallback:
+    type: object
+    required:
+      - headers
+      - authentication
+      - devices
+    properties:
+      headers:
+        $ref: '#/definitions/Headers'
+      authentication:
+        $ref: "#/definitions/Authentication"
+      devices:
+        type: array
+        items:
+          $ref: "#/definitions/Device"
+      
+
+  DiscoveryResponse:
+    type: object
+    required:
+      - headers
+      - devices
+    properties:
+      headers:
+        $ref: '#/definitions/Headers'
+      globalError:
+        x-omitempty: true
+        $ref: "#/definitions/GlobalError"
+      devices:
+        type: array
+        items:
+          $ref: "#/definitions/Device"
+
+  DeviceStateResponse:
+    type: object
+    required:
+      - headers
+      - deviceState
+    properties:
+      headers:
+        $ref: '#/definitions/Headers'
+      globalError:
+        x-omitempty: true
+        $ref: "#/definitions/GlobalError"
+      deviceState:
+        type: array
+        items:
+          $ref: "#/definitions/DeviceState"
+  
+  CommandResponse:
+    type: object
+    required:
+      - headers
+    properties:
+      headers:
+        $ref: '#/definitions/Headers'
+      globalError:
+        $ref: "#/definitions/GlobalError"
+      deviceState:
+        type: array
+        items:
+          $ref: "#/definitions/DeviceState"
+  
+  InteractionResult:
+    type: object
+    required:
+      - headers
+    properties:
+      headers:
+        $ref: '#/definitions/Headers'
+      authentication:
+        $ref: "#/definitions/Authentication"
+      originatingInteractionType:
+        $ref: "#/definitions/InteractionType"
+      globalError:
+        $ref: "#/definitions/GlobalError"
+      deviceState:
+        type: array
+        x-omitempty: true
+        items:
+          $ref: "#/definitions/DeviceState"
+
+
+

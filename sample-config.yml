@@ -1,0 +1,33 @@
+---
+
+logging:
+  location: stderr
+  format: json
+  level: info
+#  log-requests: false
+
+https:
+  port: 8443
+  cert: /etc/pki/tls/certs/host.crt
+  key: /etc/pki/tls/private/host.key
+#  graceful-timeout: 15s
+#  read-timeout: 15s
+#  write-timeout: 15ss
+
+google:
+  device-access:
+#    api-timeout: 15s
+#    project: my-project-id
+#  storage:
+#    bucket: bucket-for-callback-data
+#  creds:
+#    file: /path/to/gcp-creds.json
+#  pubsub:
+#    project-id: utopian-plane-114822
+#    subscription-id: nest
+#    max-message-age: 1h
+
+smartthings:
+#  client-id: client_id_from_app_credentials_in_smartthings_registration
+#  client-secret: client_secret_from_app_credentials_in_smartthings_registration
+#  oauth-param-file: /var/tmp/st-oauth-file.json

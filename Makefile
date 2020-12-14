@@ -36,11 +36,11 @@ build: fmtcheck
 
 .PHONY: fmtcheck
 fmtcheck:
-        @"$(CURDIR)/scripts/gofmtcheck.sh"
+	@"$(CURDIR)/scripts/gofmtcheck.sh"
 
 .PHONY: lint
 lint:
-        golangci-lint run ./...
+	golangci-lint run ./...
 
 .PHONY: tools
 tools:  $(GOBIN)/swagger
