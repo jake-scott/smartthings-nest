@@ -16,7 +16,6 @@
 
 .vscode
 *.swp
-generated
 smartthings-nest
 test
 
